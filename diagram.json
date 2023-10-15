@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "author": "Tommaso Prandin",
+  "editor": "vscode",
+  "parts": [
+    { "type": "wokwi-arduino-uno", "id": "arduino", "top": 200, "left": 150, "attrs": {} },
+    {
+      "type": "wokwi-ds1307",
+      "id": "rtc",
+      "top": 4.2,
+      "left": 0.1,
+      "attrs": { "initTime": "now" }
+    },
+    { "type": "wokwi-lcd1602", "id": "screen", "top": 0, "left": 500, "attrs": {} }
+  ],
+  "connections": [
+    [ "rtc:SDA", "arduino:A4", "pink", [] ],
+    [ "rtc:SCL", "arduino:A5", "purple", [] ],
+    [ "rtc:5V", "arduino:5V", "red", [] ],
+    [ "rtc:GND", "arduino:GND.1", "black", [] ],
+    [ "arduino:GND.1", "screen:VSS", "black", [] ],
+    [ "arduino:GND.1", "screen:K", "black", [] ],
+    [ "arduino:GND.1", "screen:RW", "black", [] ],
+    [ "arduino:5V", "screen:A", "red", [] ],
+    [ "arduino:5V", "screen:VDD", "red", [] ],
+    [ "arduino:0", "screen:D0", "green", [] ],
+    [ "arduino:1", "screen:D1", "brown", [] ],
+    [ "arduino:2", "screen:D2", "gold", [] ],
+    [ "arduino:3", "screen:D3", "gray", [] ],
+    [ "arduino:4", "screen:D4", "green", [] ],
+    [ "arduino:5", "screen:D5", "brown", [] ],
+    [ "arduino:6", "screen:D6", "gold", [] ],
+    [ "arduino:7", "screen:D7", "gray", [] ],
+    [ "arduino:8", "screen:RS", "blue", [] ],
+    [ "arduino:9", "screen:E", "purple", [] ]
+  ],
+  "serialMonitor": { "display": "auto", "newline": "lf", "convertEol": false },
+  "dependencies": {}
+}
