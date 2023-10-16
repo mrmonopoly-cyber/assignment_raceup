@@ -1,7 +1,7 @@
 #include <Wire.h>
 
 #define rs 8
-#define e 9
+#define en 9
 #define d0 0
 #define d1 1
 #define d2 2
@@ -10,6 +10,9 @@
 #define d5 5
 #define d6 6
 #define d7 7
+
+#define ARRAY_SIZE 7
+byte clock_data[ARRAY_SIZE];
 
 enum Week {
     SUNDAY=0,
@@ -23,21 +26,57 @@ enum Week {
 
 void print_array();
 int BCD_to_int(byte seconds);
-void execute_command(byte command);
-void send_data(byte command);
-void consume_data();
-void print_data(byte ele);
 
+void pulse()
+{
+  digitalWrite(en, HIGH);
+  delay(1);
+  digitalWrite(en, LOW);
+}
 
-#define ARRAY_SIZE 7
-byte clock_data[ARRAY_SIZE];
+void apply_message(byte val)
+{
+  digitalWrite(d0,(val >> 0) & 0x01);
+  digitalWrite(d1,(val >> 1) & 0x01);
+  digitalWrite(d2,(val >> 2) & 0x01);
+  digitalWrite(d3,(val >> 3) & 0x01);
+  digitalWrite(d4,(val >> 4) & 0x01);
+  digitalWrite(d5,(val >> 5) & 0x01);
+  digitalWrite(d6,(val >> 6) & 0x01);
+  digitalWrite(d7,(val >> 7) & 0x01);
+}
+
+void send_command(byte com)
+{
+  digitalWrite(rs, LOW);
+  digitalWrite(en, LOW);
+  apply_message(com);
+  pulse();
+}
+
+void send_data(byte data)
+{
+  digitalWrite(rs, HIGH);
+  digitalWrite(en, LOW);
+  apply_message(data);
+  pulse();
+}
+
+void send_string(const char *str)
+{
+  while(*str)
+  {
+    send_data(*str);
+    str++;
+  }
+}
 
 void setup() {
     // put your setup code here, to run once:
     Wire.begin();
     Serial.begin(115200);
     pinMode(rs,OUTPUT);
-    pinMode(e,OUTPUT);
+    pinMode(en,OUTPUT);
     pinMode(d0,OUTPUT);
     pinMode(d1,OUTPUT);
     pinMode(d2,OUTPUT);
@@ -46,9 +85,10 @@ void setup() {
     pinMode(d5,OUTPUT);
     pinMode(d6,OUTPUT);
     pinMode(d7,OUTPUT);
-
-    execute_command(0x01);
-    print_data('c');
+       
+    send_command(0x0f);
+    send_data(126);
+    send_data(127);
 }
 
 void loop() {
@@ -114,37 +154,4 @@ void print_array()
         Serial.print(":");
     }
     Serial.println();
-}
-
-//comandi LCD
-void print_data(byte ele)
-{
-    digitalWrite(rs,HIGH);
-    send_data(ele);
-    consume_data();
-}
-
-void execute_command(byte command)
-{
-    digitalWrite(rs,LOW);
-    send_data(command);
-    consume_data();
-}
-
-void consume_data(){
-    digitalWrite(e,HIGH);
-    delay(1);
-    digitalWrite(e,LOW);
-    delay(1);
-}
-void send_data(byte command)
-{
-    digitalWrite(0,(command >> 0) & 0x01 );
-    digitalWrite(1,(command >> 1) & 0x01 );
-    digitalWrite(2,(command >> 2) & 0x01 );
-    digitalWrite(3,(command >> 3) & 0x01 );
-    digitalWrite(4,(command >> 4) & 0x01 );
-    digitalWrite(5,(command >> 5) & 0x01 );
-    digitalWrite(6,(command >> 6) & 0x01 );
-    digitalWrite(7,(command >> 7) & 0x01 );
 }
