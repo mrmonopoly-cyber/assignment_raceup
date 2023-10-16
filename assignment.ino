@@ -1,6 +1,5 @@
 #include <Wire.h>
 
-
 #define rs 8
 #define e 9
 #define d0 0
@@ -21,7 +20,6 @@ enum Week {
     FRIDAY,
     SATURDAY
 };
-
 
 void print_array();
 int BCD_to_int(byte seconds);
@@ -74,7 +72,8 @@ void loop() {
  */
 int BCD_to_int(byte seconds)
 {
-    return ((seconds >> 4)*10) + seconds%16;
+    byte rest = seconds & 0b1111;
+    return ((seconds >> 4)*10) + rest;
 }
 
 void print_array()
@@ -131,6 +130,7 @@ void execute_command(byte command)
     send_data(command);
     consume_data();
 }
+
 void consume_data(){
     digitalWrite(e,HIGH);
     delay(1);
