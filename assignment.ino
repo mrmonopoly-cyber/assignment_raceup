@@ -11,7 +11,7 @@
 #define rs 8
 #define en 9
 
-#protocolprotocoldefine RTC_MEM_SIZE 7
+#define RTC_MEM_SIZE 7
 
 enum Week {
     SUNDAY=0,
