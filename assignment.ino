@@ -11,7 +11,7 @@
 #define rs 8
 #define en 9
 
-#define RTC_MEM_SIZE 7
+#protocolprotocoldefine RTC_MEM_SIZE 7
 
 enum Week {
     SUNDAY=0,
@@ -132,7 +132,7 @@ void print_date()
     i--;
     //print day
     send_command(0x14); //move the cursor one to the left 
-    switch (i) //print the corresponding day of the week
+    switch (i) //print the corresponding day of the week 
     {
         case MONDAY:
             send_string("Mon");
@@ -170,7 +170,7 @@ void print_date()
 
 void setup() {
     // put your setup code here, to run once:
-    Wire.begin(); //enable i2c for RTC
+    Wire.begin(); //enable i2c protocol
     //set the  pins for LCD screen to output mode
     pinMode(rs,OUTPUT); 
     pinMode(en,OUTPUT);
@@ -189,9 +189,9 @@ void setup() {
 }
 
 void loop() {
-    //set the starting register of the RTC to 0x00 
+    //set the starting register of the RTC to 0x00 starting address of seconds
     Wire.beginTransmission(0x68);
-    Wire.write(0x00); // Indirizzo del registro dei secondi
+    Wire.write(0x00); 
     Wire.endTransmission();
     print_date();
     delay(1000);
