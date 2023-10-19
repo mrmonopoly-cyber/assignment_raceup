@@ -23,9 +23,10 @@ enum Week {
     SATURDAY
 };
 
-byte clock_data[RTC_MEM_SIZE];
-
 //LCD functions
+/*
+* tells to the LCD screen to consume the input data 
+*/
 void pulse()
 {
     digitalWrite(en, HIGH);
@@ -33,6 +34,9 @@ void pulse()
     digitalWrite(en, LOW);
 }
 
+/*
+* send a byte to the LCD without consume it
+*/
 void apply_message(byte val)
 {
     digitalWrite(d0,(val >> 0) & 0x01);
@@ -45,6 +49,10 @@ void apply_message(byte val)
     digitalWrite(d7,(val >> 7) & 0x01);
 }
 
+/*
+* send a command byte (based on the ISA of the LCD screen) to the screen and tells to the LCD
+* screen to consume it
+*/
 void send_command(byte com)
 {
     digitalWrite(rs, LOW);
@@ -53,6 +61,10 @@ void send_command(byte com)
     pulse();
 }
 
+/*
+* send a single byte of data, only as data to write,
+* to the LCD screen and then tells to the screen to consume it
+*/
 void send_data(byte data)
 {
     digitalWrite(rs, HIGH);
@@ -61,6 +73,9 @@ void send_data(byte data)
     pulse();
 }
 
+/*
+* send a string to the LCD screen
+*/
 void send_string(const char *str)
 {
     while(*str)
@@ -70,6 +85,10 @@ void send_string(const char *str)
     }
 }
 
+/*
+* send a num between 0-99 to LCD screen
+* it uses the / and % operator
+*/
 void send_number(int num)
 {
     int first = num/10;
@@ -80,26 +99,40 @@ void send_number(int num)
 
 /*
  *convert BCD number format to an integer(base 10) number
+ * without using / or %
  */
 int BCD_to_int(byte seconds)
 {
-    byte rest = seconds & 0b1111;
-    return ((seconds >> 4)*10) + rest;
+    byte remainder = seconds & 0b1111;
+    return ((seconds >> 4)*10) + remainder;
 }
 
-void print_array()
+/*
+* Obtain data from the RTC component using the i2c protocol,
+* then write the data obtained, with a better structure, on the screen,
+* At the end of execution the cursor of the LCD is positioned at the home cell (starting position)
+*/
+void print_date()
 {
+    byte clock_data[RTC_MEM_SIZE];
+
+    Wire.requestFrom(0x68, RTC_MEM_SIZE);
+    for(int i=0;Wire.available();++i){
+        clock_data[i]=BCD_to_int(Wire.read());
+    }
+
     //print date
-    int i = RTC_MEM_SIZE -1;
+    send_number(20); //first part of the year 20xx in the RTC is not present
+    int i = RTC_MEM_SIZE -1; //start from the last element in the array, it's easier to write on the LCD
     for(;i>4;i--){
-        send_number(clock_data[i]);
+        send_number(clock_data[i]); //year and month
         send_data(':');
     }
-    send_number(clock_data[i]);
+    send_number(clock_data[i]);     //number of the day
     i--;
     //print day
-    send_command(0x14);
-    switch (i)
+    send_command(0x14); //move the cursor one to the left 
+    switch (i) //print the corresponding day of the week
     {
         case MONDAY:
             send_string("Mon");
@@ -124,23 +157,22 @@ void print_array()
             break;
     }
     i--;
+    send_command(0xc0); //move the cursor to the second line
     //print hour:minutes:seconds
-    send_command(0xc0);
     for(;i>=1;i--){
-        send_number(clock_data[i]);
+        send_number(clock_data[i]); //hours:minutes:
         send_data(':');
     }
-    send_number(clock_data[i]);
+    send_number(clock_data[i]); //seconds
     //reset cursor position of LCD to start
     send_command(0x02);
-
-
 }
 
 void setup() {
     // put your setup code here, to run once:
-    Wire.begin();
-    pinMode(rs,OUTPUT);
+    Wire.begin(); //enable i2c for RTC
+    //set the  pins for LCD screen to output mode
+    pinMode(rs,OUTPUT); 
     pinMode(en,OUTPUT);
     pinMode(d0,OUTPUT);
     pinMode(d1,OUTPUT);
@@ -150,23 +182,17 @@ void setup() {
     pinMode(d5,OUTPUT);
     pinMode(d6,OUTPUT);
     pinMode(d7,OUTPUT);
-
+    
+    //power on the screen, clear it, set the cursor to the starting position (0) 
+    //disable the render of the cursor in the screen
     send_command(0x0c);
-    //send_string("HELLO WORLD");
 }
 
 void loop() {
-    // put your main code here, to run repeatedly:
-
+    //set the starting register of the RTC to 0x00 
     Wire.beginTransmission(0x68);
     Wire.write(0x00); // Indirizzo del registro dei secondi
     Wire.endTransmission();
-
-    Wire.requestFrom(0x68, RTC_MEM_SIZE);
-    for(int i=0;Wire.available();++i){
-        clock_data[i]=BCD_to_int(Wire.read());
-    }
-
-    print_array();
+    print_date();
     delay(1000);
 }
